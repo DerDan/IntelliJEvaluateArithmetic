@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class EvaluateArithmeticAction extends AnAction {
+    private String lastExpressionResult = "0";
 
     /**
      * Evaluates the selection at each caret as a mathematical expression
@@ -21,14 +22,17 @@ public class EvaluateArithmeticAction extends AnAction {
         final Document document = editor.getDocument();
 
         WriteCommandAction.runWriteCommandAction(project, () -> {
+            lastExpressionResult = "0";
+            int enumeration = 0;
             for (Caret caret : editor.getCaretModel().getAllCarets()) {
                 String new_text = caret.getSelectedText();
                 if (new_text != null) {
                     document.replaceString(
                             caret.getSelectionStart(),
                             caret.getSelectionEnd(),
-                            evaluate(new_text)
+                            evaluate(new_text, enumeration)
                     );
+                    enumeration++;
                 }
                 caret.removeSelection();
             }
@@ -40,14 +44,20 @@ public class EvaluateArithmeticAction extends AnAction {
      * @param expression_string The string to evaluate as an arithmetic expression
      * @return The result of the evaluation if possible or the unchanged string if not
      */
-    static String evaluate(@NotNull String expression_string) {
+    String evaluate(@NotNull String expression_string) {
+        return evaluate(expression_string, 0);
+    }
+
+     String evaluate(@NotNull String expression_string, int numeration) {
         // Only allow arithmetic characters and whitespace
-        if (expression_string.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
+        String expressionToEvaluate = expression_string.replaceAll("\\$", lastExpressionResult);
+        expressionToEvaluate = expressionToEvaluate.replaceAll("#", String.valueOf(numeration));
+        if (expressionToEvaluate.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
             try {
-                boolean appendResultToExpression = expression_string.contains("=");
+                final boolean appendResultToExpression = expressionToEvaluate.contains("=");
                 // Normalise all whitespace to spaces, remove the optional equal sign (=).
                 // This means groovy expects a single expression
-                String new_string = expression_string.replaceAll("\\s|=", " ");
+                String new_string = expressionToEvaluate.replaceAll("\\s|=", " ");
 
                 String answer = String.valueOf(Eval.me(new_string));
                 if (answer.contains(".")) {
@@ -58,10 +68,11 @@ public class EvaluateArithmeticAction extends AnAction {
                     answer = answer.replaceAll("\\.$","");
 
                 }
-                return appendResultToExpression ? (expression_string + answer) : answer;
+                lastExpressionResult = answer;
+                return appendResultToExpression ? (expressionToEvaluate + answer) : answer;
             } catch (GroovyRuntimeException e) {
                 // The expression was not a valid arithmetic expression
-                return expression_string;
+                return expressionToEvaluate;
             }
         }
         return expression_string;

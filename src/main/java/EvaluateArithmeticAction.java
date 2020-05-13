@@ -68,11 +68,10 @@ public class EvaluateArithmeticAction extends AnAction {
                     answer = answer.replaceAll("\\.$","");
 
                 }
-                lastExpressionResult = answer;
                 return append_result_to_expression ? (expression_string + answer) : answer;
             } catch (GroovyRuntimeException e) {
                 // The expression was not a valid arithmetic expression
-                return expression_string;
+                return expressionToEvaluate;
             }
         }
         return expression_string;

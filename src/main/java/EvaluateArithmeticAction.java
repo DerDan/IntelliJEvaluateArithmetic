@@ -8,12 +8,13 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class EvaluateArithmeticAction extends AnAction {
-    private String lastExpressionResult = "0";
+    private String previous_expression_result = "0";
 
     /**
      * Evaluates the selection at each caret as a mathematical expression
      * and replaces the content of the selection with the answer.
-     * @param event  Event related to this action
+     *
+     * @param event Event related to this action
      */
     @Override
     public void actionPerformed(@NotNull final AnActionEvent event) {
@@ -22,17 +23,17 @@ public class EvaluateArithmeticAction extends AnAction {
         final Document document = editor.getDocument();
 
         WriteCommandAction.runWriteCommandAction(project, () -> {
-            lastExpressionResult = "0";
-            int enumeration = 0;
+            previous_expression_result = "0";
+            int index_of_selection = 1;
             for (Caret caret : editor.getCaretModel().getAllCarets()) {
                 String new_text = caret.getSelectedText();
                 if (new_text != null) {
                     document.replaceString(
                             caret.getSelectionStart(),
                             caret.getSelectionEnd(),
-                            evaluate(new_text, enumeration)
+                            evaluate(new_text, index_of_selection)
                     );
-                    enumeration++;
+                    index_of_selection++;
                 }
                 caret.removeSelection();
             }
@@ -41,37 +42,41 @@ public class EvaluateArithmeticAction extends AnAction {
 
     /**
      * Evaluate a given string as an arithmetic expression and return the result as a string
+     *
      * @param expression_string The string to evaluate as an arithmetic expression
      * @return The result of the evaluation if possible or the unchanged string if not
      */
     String evaluate(@NotNull String expression_string) {
-        return evaluate(expression_string, 0);
+        return evaluate(expression_string, 1);
     }
 
-     String evaluate(@NotNull String expression_string, int numeration) {
+    String evaluate(@NotNull String expression_string, int index_of_selection) {
+        // replace $ with the previous expression result
+        String expression_to_evaluate = expression_string.replaceAll("\\$", previous_expression_result);
+        // replace # with the index of selection
+        expression_to_evaluate = expression_to_evaluate.replaceAll("#", String.valueOf(index_of_selection));
         // Only allow arithmetic characters and whitespace
-        String expressionToEvaluate = expression_string.replaceAll("\\$", lastExpressionResult);
-        expressionToEvaluate = expressionToEvaluate.replaceAll("#", String.valueOf(numeration));
-        if (expressionToEvaluate.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
+        if (expression_to_evaluate.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
             try {
                 boolean append_result_to_expression = expression_string.contains("=");
                 // Normalise all whitespace to spaces, remove the optional equal sign (=).
                 // This means groovy expects a single expression
-                String new_string = expressionToEvaluate.replaceAll("\\s|=", " ");
+                String new_string = expression_to_evaluate.replaceAll("\\s|=", " ");
 
                 String answer = String.valueOf(Eval.me(new_string));
                 if (answer.contains(".")) {
                     // Strip all trailing zeroes after decimal point
-                    answer = answer.replaceAll("0*$","");
+                    answer = answer.replaceAll("0*$", "");
 
                     // Remove the decimal point if there's nothing left after it
-                    answer = answer.replaceAll("\\.$","");
+                    answer = answer.replaceAll("\\.$", "");
 
                 }
+                previous_expression_result = answer;
                 return append_result_to_expression ? (expression_string + answer) : answer;
             } catch (GroovyRuntimeException e) {
                 // The expression was not a valid arithmetic expression
-                return expressionToEvaluate;
+                return expression_string;
             }
         }
         return expression_string;

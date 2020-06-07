@@ -64,7 +64,7 @@ public class ArithmeticTests {
     }
 
     @Test
-    public void canEnumerateSelection() {
+    public void canUseIndexOfSelection() {
         EvaluateArithmeticAction action = new EvaluateArithmeticAction();
         assertEquals("0", action.evaluate("# * 2", 0));
         assertEquals("2", action.evaluate("# * 2", 1));

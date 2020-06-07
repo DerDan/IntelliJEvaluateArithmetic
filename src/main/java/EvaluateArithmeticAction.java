@@ -2,19 +2,18 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.project.Project;
-import groovy.lang.GroovyRuntimeException;
-import groovy.util.Eval;
 import org.jetbrains.annotations.NotNull;
+import com.fathzer.soft.javaluator.DoubleEvaluator;
 
 
 public class EvaluateArithmeticAction extends AnAction {
+    private static DoubleEvaluator evaluator = new DoubleEvaluator();
     private String previous_expression_result = "0";
 
     /**
      * Evaluates the selection at each caret as a mathematical expression
      * and replaces the content of the selection with the answer.
-     *
-     * @param event Event related to this action
+     * @param event  Event related to this action
      */
     @Override
     public void actionPerformed(@NotNull final AnActionEvent event) {
@@ -42,13 +41,17 @@ public class EvaluateArithmeticAction extends AnAction {
 
     /**
      * Evaluate a given string as an arithmetic expression and return the result as a string
-     *
      * @param expression_string The string to evaluate as an arithmetic expression
      * @return The result of the evaluation if possible or the unchanged string if not
      */
     String evaluate(@NotNull String expression_string) {
         return evaluate(expression_string, 1);
     }
+    /**
+     * Evaluate a given string as an arithmetic expression and return the result as a string
+     * @param expression_string The string to evaluate as an arithmetic expression
+     * @return The result of the evaluation if possible or the unchanged string if not
+     */
 
     String evaluate(@NotNull String expression_string, int index_of_selection) {
         // replace $ with the previous expression result
@@ -63,18 +66,18 @@ public class EvaluateArithmeticAction extends AnAction {
                 // This means groovy expects a single expression
                 String new_string = expression_to_evaluate.replaceAll("\\s|=", " ");
 
-                String answer = String.valueOf(Eval.me(new_string));
+                String answer = String.valueOf(evaluator.evaluate(new_string));
                 if (answer.contains(".")) {
                     // Strip all trailing zeroes after decimal point
-                    answer = answer.replaceAll("0*$", "");
+                    answer = answer.replaceAll("0*$","");
 
                     // Remove the decimal point if there's nothing left after it
-                    answer = answer.replaceAll("\\.$", "");
+                    answer = answer.replaceAll("\\.$","");
 
                 }
                 previous_expression_result = answer;
                 return append_result_to_expression ? (expression_string + answer) : answer;
-            } catch (GroovyRuntimeException e) {
+            } catch (IllegalArgumentException e) {
                 // The expression was not a valid arithmetic expression
                 return expression_string;
             }

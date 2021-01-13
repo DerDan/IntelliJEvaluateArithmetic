@@ -14,6 +14,7 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <lang.documentationProvider language="C" implementationClass="com.intellij.c.documentation.CDocumentationProvider" id="pythonDocumentationProvider"/>
     </extensions>
 
     <actions>

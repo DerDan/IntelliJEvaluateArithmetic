@@ -1,10 +1,12 @@
+import com.fathzer.soft.javaluator.DoubleEvaluator;
 import org.junit.Test;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ArithmeticTests {
 
@@ -121,16 +123,24 @@ public class ArithmeticTests {
         ScriptEngine engine = mgr.getEngineByName("JavaScript");
         String foo = "40.1+0x2";
         try {
+            System.out.println(foo);
+            System.out.println(engine.eval(foo));
+        } catch (ScriptException e) {
+            e.printStackTrace();
+        }
+        foo = "1000000000000000+1";
+        try {
+            System.out.println(foo);
             System.out.println(engine.eval(foo));
         } catch (ScriptException e) {
             e.printStackTrace();
         }
 
-//        DoubleEvaluator evaluator = new DoubleEvaluator();
-//        try {
-//            evaluator.evaluate("0x100");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        DoubleEvaluator evaluator = new DoubleEvaluator();
+        try {
+            evaluator.evaluate("0x100");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

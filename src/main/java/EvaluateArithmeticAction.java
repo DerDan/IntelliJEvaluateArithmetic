@@ -27,16 +27,16 @@ public class EvaluateArithmeticAction extends AnAction {
 
         WriteCommandAction.runWriteCommandAction(project, () -> {
             previous_expression_result = "0";
-            int index_of_selection = 1;
+            int selection_index = 1;
             for (Caret caret : editor.getCaretModel().getAllCarets()) {
-                String new_text = caret.getSelectedText();
-                if (new_text != null) {
+                String selected_text = caret.getSelectedText();
+                if (selected_text != null) {
                     document.replaceString(
                             caret.getSelectionStart(),
                             caret.getSelectionEnd(),
-                            evaluate(new_text, index_of_selection)
+                            evaluate(selected_text, selection_index)
                     );
-                    index_of_selection++;
+                    selection_index++;
                 }
                 caret.removeSelection();
             }
@@ -57,6 +57,7 @@ public class EvaluateArithmeticAction extends AnAction {
      * Evaluate a given string as an arithmetic expression and return the result as a string
      *
      * @param expression_string The string to evaluate as an arithmetic expression
+     * @param index_of_selection An index of current selection to process
      * @return The result of the evaluation if possible or the unchanged string if not
      */
 
@@ -68,7 +69,7 @@ public class EvaluateArithmeticAction extends AnAction {
         // Only allow arithmetic characters and whitespace
         if (expression_to_evaluate.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
             try {
-                final boolean append_result_to_expression = expressionToEvaluate.contains("=");
+                final boolean append_result_to_expression = expression_to_evaluate.contains("=");
                 // Normalise all whitespace to spaces, remove the optional equal sign (=).
                 // This means groovy expects a single expression
                 String new_string = expression_to_evaluate.replaceAll("\\s|=", " ");

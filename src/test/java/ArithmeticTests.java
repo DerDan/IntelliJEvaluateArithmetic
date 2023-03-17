@@ -1,9 +1,5 @@
-import com.fathzer.soft.javaluator.DoubleEvaluator;
 import org.junit.Test;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -55,7 +51,7 @@ public class ArithmeticTests {
     }
 
     @Test
-    public void precendenceWorks() {
+    public void precedenceWorks() {
         EvaluateArithmeticAction action = new EvaluateArithmeticAction();
         assertEquals("7", action.evaluate("1 + 2 * 3"));
         assertEquals("9", action.evaluate("(1 + 2) * 3"));
@@ -76,7 +72,7 @@ public class ArithmeticTests {
         assertEquals("0", action.evaluate("# * 2", 0));
         assertEquals("2", action.evaluate("# * 2", 1));
         assertEquals("4", action.evaluate("# * 2", 2));
-        assertEquals("4", action.evaluate("$", 2));
+        assertEquals("4", action.evaluate("$", 3));
     }
 
 
@@ -117,30 +113,8 @@ public class ArithmeticTests {
     @Test
 
     public void canEvaluateHexadecimalNumbers() {
-//        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
-//        assertEquals("257", action.evaluate("0x100+1"));
-        ScriptEngineManager mgr = new ScriptEngineManager();
-        ScriptEngine engine = mgr.getEngineByName("JavaScript");
-        String foo = "40.1+0x2";
-        try {
-            System.out.println(foo);
-            System.out.println(engine.eval(foo));
-        } catch (ScriptException e) {
-            e.printStackTrace();
-        }
-        foo = "1000000000000000+1";
-        try {
-            System.out.println(foo);
-            System.out.println(engine.eval(foo));
-        } catch (ScriptException e) {
-            e.printStackTrace();
-        }
-
-        DoubleEvaluator evaluator = new DoubleEvaluator();
-        try {
-            evaluator.evaluate("0x100");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        assertEquals("256", action.evaluate("0x100"));
+        assertEquals("257", action.evaluate("0x100+1"));
     }
 }

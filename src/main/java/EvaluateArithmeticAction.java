@@ -10,7 +10,17 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 public class EvaluateArithmeticAction extends AnAction {
-    private static final DoubleEvaluator evaluator = new DoubleEvaluator();
+    private static final DoubleEvaluator evaluator = new DoubleEvaluator() {
+        @Override
+        protected Double toValue(String literal, Object evaluationContext) {
+            if (literal.matches("0[xX][0-9a-fA-F]+")) {
+                return (double) Integer.parseInt(literal.substring(2), 16);
+            } else {
+                return super.toValue(literal, evaluationContext);
+            }
+        }
+    };
+
     private String previous_expression_result = "0";
 
     /**
@@ -56,7 +66,7 @@ public class EvaluateArithmeticAction extends AnAction {
     /**
      * Evaluate a given string as an arithmetic expression and return the result as a string
      *
-     * @param expression_string The string to evaluate as an arithmetic expression
+     * @param expression_string  The string to evaluate as an arithmetic expression
      * @param index_of_selection An index of current selection to process
      * @return The result of the evaluation if possible or the unchanged string if not
      */
@@ -67,7 +77,7 @@ public class EvaluateArithmeticAction extends AnAction {
         // replace # with the index of selection
         expression_to_evaluate = expression_to_evaluate.replaceAll("#", String.valueOf(index_of_selection));
         // Only allow arithmetic characters and whitespace
-        if (expression_to_evaluate.matches("^[0-9+\\-/*^().\\s]*(=\\s*)?")) {
+        if (expression_to_evaluate.matches("^[xX0-9+\\-/*^().\\s]*(=\\s*)?")) {
             try {
                 final boolean append_result_to_expression = expression_to_evaluate.contains("=");
                 // Normalise all whitespace to spaces, remove the optional equal sign (=).

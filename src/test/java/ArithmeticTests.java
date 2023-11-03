@@ -111,7 +111,6 @@ public class ArithmeticTests {
     }
 
     @Test
-
     public void canEvaluateHexadecimalNumbers() {
         EvaluateArithmeticAction action = new EvaluateArithmeticAction();
         assertEquals("256", action.evaluate("0x100"));

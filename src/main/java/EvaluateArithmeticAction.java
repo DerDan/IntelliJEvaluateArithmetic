@@ -85,9 +85,10 @@ public class EvaluateArithmeticAction extends AnAction {
                 String new_string = expression_to_evaluate.replaceAll("\\s|=", " ");
 
                 Double value_double = evaluator.evaluate(new_string);
-                long value_long = (long) (value_double * 1d);
+                long value_long = value_double.longValue();
                 String answer;
                 if (value_long == value_double) {
+                    // avoid scientific notation
                     answer = String.valueOf(value_long);
                 } else {
                     answer = String.valueOf(value_double);

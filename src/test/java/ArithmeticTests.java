@@ -1,8 +1,9 @@
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ArithmeticTests {
 
@@ -115,5 +116,86 @@ public class ArithmeticTests {
         EvaluateArithmeticAction action = new EvaluateArithmeticAction();
         assertEquals("256", action.evaluate("0x100"));
         assertEquals("257", action.evaluate("0x100+1"));
+    }
+
+    @Test
+    public void isNumberRecognizesIntegers() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        assertTrue(action.isNumber("5"));
+        assertTrue(action.isNumber("42"));
+        assertTrue(action.isNumber("-3"));
+        assertTrue(action.isNumber("3.14"));
+        assertTrue(action.isNumber("0x1F"));
+        assertFalse(action.isNumber("1+2"));
+        assertFalse(action.isNumber("abc"));
+        assertFalse(action.isNumber(null));
+    }
+
+    @Test
+    public void multiCaretSumAppendedToLastSelection() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.applySumToSelections(Arrays.asList("5", "3", "7"));
+        assertEquals("5", result.get(0));
+        assertEquals("3", result.get(1));
+        assertEquals("7 = 15", result.get(2));
+    }
+
+    @Test
+    public void multiCaretSumWithTwoNumbers() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.applySumToSelections(Arrays.asList("10", "20"));
+        assertEquals("10", result.get(0));
+        assertEquals("20 = 30", result.get(1));
+    }
+
+    @Test
+    public void multiCaretSumWithDecimals() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.applySumToSelections(Arrays.asList("0.5", "1", "1.5"));
+        assertEquals("1.5 = 3", result.get(2));
+    }
+
+    @Test
+    public void multiCaretSumWithHex() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.applySumToSelections(Arrays.asList("0x100", "16"));
+        assertEquals("16 = 272", result.get(1));
+    }
+
+    @Test
+    public void processSelectionsUsesSumWhenAllNumbers() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.processSelections(Arrays.asList("4", "6"));
+        assertEquals("4", result.get(0));
+        assertEquals("6 = 10", result.get(1));
+    }
+
+    @Test
+    public void processSelectionsEvaluatesExpressionsWhenNotAllNumbers() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.processSelections(Arrays.asList("1+2", "3*4"));
+        assertEquals("3", result.get(0));
+        assertEquals("12", result.get(1));
+    }
+
+    @Test
+    public void processSelectionsSingleNumberIsEvaluatedNotSummed() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.processSelections(Arrays.asList("42"));
+        assertEquals("42", result.get(0));
+    }
+
+    @Test
+    public void multiCaretSumWithEmpty() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.processSelections(Arrays.asList("10", "20", "", ""));
+        assertEquals("= 30", result.get(3));
+    }
+
+    @Test
+    public void multiCaretSumWithText() {
+        EvaluateArithmeticAction action = new EvaluateArithmeticAction();
+        List<String> result = action.processSelections(Arrays.asList("0x100", "16", "Abc", "12"));
+        assertEquals("12", result.get(3));
     }
 }

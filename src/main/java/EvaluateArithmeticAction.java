@@ -9,6 +9,10 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 public class EvaluateArithmeticAction extends AnAction {
     private static final DoubleEvaluator evaluator = new DoubleEvaluator() {
         @Override
@@ -36,17 +40,17 @@ public class EvaluateArithmeticAction extends AnAction {
         final Document document = editor.getDocument();
 
         WriteCommandAction.runWriteCommandAction(project, () -> {
-            previous_expression_result = "0";
-            int selection_index = 1;
-            for (Caret caret : editor.getCaretModel().getAllCarets()) {
-                String selected_text = caret.getSelectedText();
-                if (selected_text != null) {
-                    document.replaceString(
-                            caret.getSelectionStart(),
-                            caret.getSelectionEnd(),
-                            evaluate(selected_text, selection_index)
-                    );
-                    selection_index++;
+            List<Caret> carets = editor.getCaretModel().getAllCarets();
+            List<String> selectedTexts = carets.stream()
+                    .map(Caret::getSelectedText)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            List<String> results = processSelections(selectedTexts);
+            for (int i = 0; i < carets.size(); i++) {
+                Caret caret = carets.get(i);
+                if (caret.getSelectedText() != null) {
+                    document.replaceString(caret.getSelectionStart(), caret.getSelectionEnd(), results.get(i));
                 }
                 caret.removeSelection();
             }
@@ -109,6 +113,56 @@ public class EvaluateArithmeticAction extends AnAction {
             }
         }
         return expression_string;
+    }
+
+    List<String> processSelections(List<String> selections) {
+        if (selections.size() > 1 && selections.stream().allMatch(this::isNumber)) {
+            return applySumToSelections(selections);
+        }
+        previous_expression_result = "0";
+        List<String> results = new java.util.ArrayList<>();
+        int index = 1;
+        for (String sel : selections) {
+            results.add(evaluate(sel, index));
+            index++;
+        }
+        return results;
+    }
+
+    protected List<String> applySumToSelections(List<String> selections) {
+        double sum = selections.stream().mapToDouble(this::parseNumber).sum();
+        String sumStr = formatNumber(sum);
+        List<String> result = new java.util.ArrayList<>(selections);
+        String last = selections.get(selections.size() - 1).trim();
+        result.set(result.size() - 1, (last.isEmpty() ? "" : last + " ") + "= " + sumStr);
+        return result;
+    }
+
+    boolean isNumber(String text) {
+        if (text == null) return false;
+        String t = text.trim();
+        return t.isEmpty() || t.matches("0[xX][0-9a-fA-F]+") || t.matches("-?\\d+(\\.\\d+)?");
+    }
+
+    double parseNumber(String text) {
+        String t = text.trim();
+        if (t.isEmpty()) return 0;
+        if (t.matches("0[xX][0-9a-fA-F]+")) {
+            return (double) Long.parseLong(t.substring(2), 16);
+        }
+        return Double.parseDouble(t);
+    }
+
+    String formatNumber(double value) {
+        long valueLong = (long) value;
+        if (valueLong == value) {
+            return String.valueOf(valueLong);
+        }
+        String result = String.valueOf(value);
+        if (result.contains(".")) {
+            result = result.replaceAll("0*$", "").replaceAll("\\.$", "");
+        }
+        return result;
     }
 
     @Override

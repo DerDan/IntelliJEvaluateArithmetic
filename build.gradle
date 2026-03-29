@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.intellij' version '1.17.4'
 }
 
-version '1.4.4'
+version '1.5.0'
 
 repositories {
     mavenCentral()
@@ -23,8 +23,10 @@ intellij {
 patchPluginXml {
     changeNotes = """
       <ul>
-        <li>Extended syntax to to support placeholder # and \$</li>
-        <li>support of hexadecimal values with prefix 0x</li>
+        <li>Multiple selected numbers are summed and the result is appended to the last selection</li>
+        <li>Empty selections are treated as 0 in multi-caret sum</li>
+        <li>Extended syntax to support placeholder # and \$</li>
+        <li>Support of hexadecimal values with prefix 0x</li>
       </ul>
       """
 }
